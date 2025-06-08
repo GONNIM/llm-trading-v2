@@ -4,6 +4,11 @@ import traceback
 from backtest_runner import run_backtest
 from datetime import datetime, timedelta
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 logger = logging.getLogger(__name__)
 
 st.set_page_config(
@@ -149,146 +154,148 @@ if submitted:
         st.error("올바른 거래 종목 형식이 아닙니다. (예: BTC, ETH, KRW-BTC)")
     else:
         try:
-            logger.info("사용자 입력 파라미터 검증 시작")
-            if fast_period >= slow_period:
-                raise ValueError("단기 EMA는 장기 EMA보다 작아야 합니다.")
-            params = {
-                "ticker": f"KRW-{ticker}",
-                "interval": selected_interval,
-                "days": days,
-                "fast_period": fast_period,
-                "slow_period": slow_period,
-                "signal_period": signal_period,
-                "take_profit": take_profit,
-                "stop_loss": stop_loss,
-                "macd_threshold": macd_threshold,
-                "min_holding_period": min_holding_period,
-                "macd_crossover_threshold": macd_crossover_threshold,
-                "cash": cash,
-                "commission": 0.0005,
-            }
-            logger.info(f"검증된 파라미터: {params}")
-            result = run_backtest(params)
+            with st.spinner("사용자 입력 파라미터 검증 중…"):
+                logger.info("사용자 입력 파라미터 검증 시작")
+                if fast_period >= slow_period:
+                    raise ValueError("단기 EMA는 장기 EMA보다 작아야 합니다.")
+                params = {
+                    "ticker": f"KRW-{ticker}",
+                    "interval": selected_interval,
+                    "days": days,
+                    "fast_period": fast_period,
+                    "slow_period": slow_period,
+                    "signal_period": signal_period,
+                    "take_profit": take_profit,
+                    "stop_loss": stop_loss,
+                    "macd_threshold": macd_threshold,
+                    "min_holding_period": min_holding_period,
+                    "macd_crossover_threshold": macd_crossover_threshold,
+                    "cash": cash,
+                    "commission": 0.0005,
+                }
+                logger.info(f"검증된 파라미터: {params}")
+                with st.spinner("백테스트 실행 중…"):
+                    result = run_backtest(params)
 
-            # 결과 구조 확인
-            logger.info(f"결과 타입: {type(result)}")
-            if hasattr(result, "to_dict"):
-                result = result.to_dict()
-            logger.info(f"결과 키: {result.keys()}")
+                # 결과 구조 확인
+                logger.info(f"결과 타입: {type(result)}")
+                if hasattr(result, "to_dict"):
+                    result = result.to_dict()
+                logger.info(f"결과 키: {result.keys()}")
 
-            # 안전하게 값 가져오기
-            end_value = (
-                result.get("End Value")
-                or result.get("Equity Final [$]")
-                or result.get("Equity Final")
-                or "확인 불가"
-            )
-            return_pct = result.get("Return [%]") or result.get("Return") or "확인 불가"
-            max_dd = (
-                result.get("Max. Drawdown [%]")
-                or result.get("Max. Drawdown")
-                or "확인 불가"
-            )
-
-            # 결과 표시
-            st.subheader(f"📊 백테스트 결과 < {ticker} >")
-
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(
-                    "최종 자산",
-                    (
-                        f"{end_value:,.0f}원"
-                        if isinstance(end_value, (int, float))
-                        else end_value
-                    ),
+                # 안전하게 값 가져오기
+                end_value = (
+                    result.get("End Value")
+                    or result.get("Equity Final [$]")
+                    or result.get("Equity Final")
+                    or "확인 불가"
                 )
-            with col2:
-                st.metric(
-                    "수익률",
-                    (
-                        f"{return_pct:.2f}%"
-                        if isinstance(return_pct, (int, float))
-                        else return_pct
-                    ),
-                )
-            with col3:
-                st.metric(
-                    "최대 손실",
-                    (f"{max_dd:.2f}%" if isinstance(max_dd, (int, float)) else max_dd),
+                return_pct = result.get("Return [%]") or result.get("Return") or "확인 불가"
+                max_dd = (
+                    result.get("Max. Drawdown [%]")
+                    or result.get("Max. Drawdown")
+                    or "확인 불가"
                 )
 
-            # 거래 내역 및 통계 계산
-            trades_df = None
-            if hasattr(result, "_trades"):
-                trades_df = result._trades
-            elif isinstance(result, dict) and "_trades" in result:
-                trades_df = result["_trades"]
+                # 결과 표시
+                st.subheader(f"📊 백테스트 결과 < {ticker} >")
 
-            if trades_df is not None and not trades_df.empty:
-                total_trades = len(trades_df)
-                profit_trades = (trades_df["PnL"] > 0).sum()
-                loss_trades = (trades_df["PnL"] <= 0).sum()
-                max_investment = (trades_df["Size"] * trades_df["EntryPrice"]).max()
-                win_rate = (
-                    (profit_trades / total_trades * 100) if total_trades > 0 else 0
-                )
-            else:
-                total_trades = profit_trades = loss_trades = max_investment = (
-                    win_rate
-                ) = 0
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric(
+                        "최종 자산",
+                        (
+                            f"{end_value:,.0f}원"
+                            if isinstance(end_value, (int, float))
+                            else end_value
+                        ),
+                    )
+                with col2:
+                    st.metric(
+                        "수익률",
+                        (
+                            f"{return_pct:.2f}%"
+                            if isinstance(return_pct, (int, float))
+                            else return_pct
+                        ),
+                    )
+                with col3:
+                    st.metric(
+                        "최대 손실",
+                        (f"{max_dd:.2f}%" if isinstance(max_dd, (int, float)) else max_dd),
+                    )
 
-            # 추가 통계 표시
-            st.write("---")
+                # 거래 내역 및 통계 계산
+                trades_df = None
+                if hasattr(result, "_trades"):
+                    trades_df = result._trades
+                elif isinstance(result, dict) and "_trades" in result:
+                    trades_df = result["_trades"]
 
-            col4, col5, col6 = st.columns(3)
-            with col4:
-                st.metric("총 거래 횟수", f"{total_trades:,}")
-
-            with col5:
-                st.metric("수익 거래", f"{profit_trades:,}")
-
-            with col6:
-                st.metric("손실 거래", f"{loss_trades:,}")
-
-            with st.expander("전체 거래 내역"):
                 if trades_df is not None and not trades_df.empty:
-                    renamed_df = rename_and_filter_columns(trades_df, column_mapping)
-                    st.dataframe(renamed_df)
+                    total_trades = len(trades_df)
+                    profit_trades = (trades_df["PnL"] > 0).sum()
+                    loss_trades = (trades_df["PnL"] <= 0).sum()
+                    max_investment = (trades_df["Size"] * trades_df["EntryPrice"]).max()
+                    win_rate = (
+                        (profit_trades / total_trades * 100) if total_trades > 0 else 0
+                    )
                 else:
-                    st.write("거래 내역 없음")
+                    total_trades = profit_trades = loss_trades = max_investment = (
+                        win_rate
+                    ) = 0
 
-            with st.expander("수익 거래 내역"):
-                if trades_df is not None and not trades_df.empty:
-                    profit_df = trades_df[trades_df["PnL"] > 0]
-                    if not profit_df.empty:
-                        renamed_profit_df = rename_and_filter_columns(
-                            profit_df, column_mapping
-                        )
-                        st.dataframe(renamed_profit_df)
+                # 추가 통계 표시
+                st.write("---")
+
+                col4, col5, col6 = st.columns(3)
+                with col4:
+                    st.metric("총 거래 횟수", f"{total_trades:,}")
+
+                with col5:
+                    st.metric("수익 거래", f"{profit_trades:,}")
+
+                with col6:
+                    st.metric("손실 거래", f"{loss_trades:,}")
+
+                with st.expander("전체 거래 내역"):
+                    if trades_df is not None and not trades_df.empty:
+                        renamed_df = rename_and_filter_columns(trades_df, column_mapping)
+                        st.dataframe(renamed_df)
+                    else:
+                        st.write("거래 내역 없음")
+
+                with st.expander("수익 거래 내역"):
+                    if trades_df is not None and not trades_df.empty:
+                        profit_df = trades_df[trades_df["PnL"] > 0]
+                        if not profit_df.empty:
+                            renamed_profit_df = rename_and_filter_columns(
+                                profit_df, column_mapping
+                            )
+                            st.dataframe(renamed_profit_df)
+                        else:
+                            st.write("수익 거래 내역 없음")
                     else:
                         st.write("수익 거래 내역 없음")
-                else:
-                    st.write("수익 거래 내역 없음")
 
-            with st.expander("손실 거래 내역"):
-                if trades_df is not None and not trades_df.empty:
-                    loss_df = trades_df[trades_df["PnL"] <= 0]
-                    if not loss_df.empty:
-                        renamed_loss_df = rename_and_filter_columns(
-                            loss_df, column_mapping
-                        )
-                        st.dataframe(renamed_loss_df)
+                with st.expander("손실 거래 내역"):
+                    if trades_df is not None and not trades_df.empty:
+                        loss_df = trades_df[trades_df["PnL"] <= 0]
+                        if not loss_df.empty:
+                            renamed_loss_df = rename_and_filter_columns(
+                                loss_df, column_mapping
+                            )
+                            st.dataframe(renamed_loss_df)
+                        else:
+                            st.write("손실 거래 내역 없음")
                     else:
                         st.write("손실 거래 내역 없음")
-                else:
-                    st.write("손실 거래 내역 없음")
 
-            st.write(f"**승률:** {win_rate:.2f}%")
-            st.write(f"**최대 투자금:** {max_investment:,.0f}원")
+                st.write(f"**승률:** {win_rate:.2f}%")
+                st.write(f"**최대 투자금:** {max_investment:,.0f}원")
 
-            with st.expander("상세 통계 보기"):
-                st.write(result)
+                with st.expander("상세 통계 보기"):
+                    st.write(result)
         except Exception as e:
             logger.error(f"사용자 입력 오류: {str(e)}")
             st.error(f"오류 발생: {str(e)}")
