@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="업비트 자동매매 시스템 - MACD, EMA v2", page_icon="📈", layout="wide"
 )
 
-st.title("📊 업비트 자동매매 백테스트 - MACD, EMA v2")
+st.title("📈 업비트 자동매매 백테스트 - MACD, EMA v2")
 
 # 차트 단위 옵션 (한글:코드 매핑)
 interval_options = {
@@ -87,7 +87,7 @@ with st.sidebar:
     sort_column = "진입 시간"
     sort_order = st.radio(
         "정렬 방향을 선택하세요",
-        ("오름차순", "내림차순"),
+        ("내림차순", "오름차순"),
         horizontal=True,
     )
     ascending = True if sort_order == "오름차순" else False
