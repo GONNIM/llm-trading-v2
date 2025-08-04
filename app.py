@@ -97,7 +97,7 @@ with st.sidebar:
         selected_interval_name = st.selectbox(
             "차트 단위",
             list(interval_options.keys()),
-            index=6,  # 기본값: 60분봉
+            index=5,  # 기본값: 30분봉
             help="차트 데이터의 시간 단위를 선택하세요.",
         )
         selected_interval = interval_options[selected_interval_name]
