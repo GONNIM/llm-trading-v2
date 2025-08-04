@@ -127,7 +127,7 @@ with st.sidebar:
             min_value=-100.0,
             max_value=100.0,
             value=0.0,
-            step=1,
+            step=1.0,
         )
         take_profit = st.number_input("Take Profit (%)", 0.5, 50.0, 3.0, 0.5) / 100
         stop_loss = st.number_input("Stop Loss (%)", 0.5, 50.0, 1.0, 0.5) / 100
