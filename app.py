@@ -119,18 +119,18 @@ with st.sidebar:
                 value=90,
                 help="분석에 사용할 데이터의 일수를 직접 입력하세요.",
             )
-        fast_period = st.number_input("단기 EMA", 5, 50, 12)
-        slow_period = st.number_input("장기 EMA", 20, 100, 26)
-        signal_period = st.number_input("신호선 기간", 5, 20, 7)
+        fast_period = st.number_input("단기 EMA", 1, 50, 12)
+        slow_period = st.number_input("장기 EMA", 5, 240, 26)
+        signal_period = st.number_input("신호선 기간", 1, 50, 9)
         macd_threshold = st.number_input(
             "MACD 기준값 (기준선)",
-            min_value=-10.0,
-            max_value=10.0,
+            min_value=-100.0,
+            max_value=100.0,
             value=0.0,
-            step=0.01,
+            step=1,
         )
-        take_profit = st.number_input("Take Profit (%)", 0.1, 50.0, 5.0, 0.1) / 100
-        stop_loss = st.number_input("Stop Loss (%)", 0.1, 50.0, 1.0, 0.1) / 100
+        take_profit = st.number_input("Take Profit (%)", 0.5, 50.0, 3.0, 0.5) / 100
+        stop_loss = st.number_input("Stop Loss (%)", 0.5, 50.0, 1.0, 0.5) / 100
         cash = st.number_input("초기 자본 (원)", 100_000, 100_000_000_000, 1_000_000)
 
         # 미세 조정 파라미터
