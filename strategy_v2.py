@@ -5,7 +5,7 @@ import logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ class MACDStrategy(Strategy):
     fast_period = 12
     slow_period = 26
     signal_period = 9
-    take_profit = 0.05
-    stop_loss = 0.03
+    take_profit = 0.03
+    stop_loss = 0.01
     macd_threshold = 0.0
     min_holding_period = 2
     macd_crossover_threshold = 0.0
